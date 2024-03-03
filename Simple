@@ -1,0 +1,48 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
+#define MAX_INPUT_LENGTH 100
+
+void execute_command(const char *command) {
+    pid_t child_pid;
+    int status;
+
+    child_pid = fork();
+    if (child_pid == 0) {
+        // Child process
+        execlp(command, command, NULL);
+        perror("Error executing command");
+        exit(EXIT_FAILURE);
+    } else if (child_pid > 0) {
+        // Parent process
+        waitpid(child_pid, &status, 0);
+    } else {
+        perror("Error forking process");
+    }
+}
+
+int main() {
+    char input[MAX_INPUT_LENGTH];
+
+    while (1) {
+        printf("#cisfun$ "); // Display prompt
+        if (fgets(input, sizeof(input), stdin) == NULL) {
+            // Handle end-of-file (Ctrl+D)
+            printf("\nExiting shell. Goodbye!\n");
+            break;
+        }
+
+        // Remove newline character from input
+        input[strcspn(input, "\n")] = '\0';
+
+        // Execute the command
+        execute_command(input);
+    }
+
+    return 0;
+}
+
